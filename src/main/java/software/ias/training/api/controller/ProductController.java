@@ -1,30 +1,47 @@
 package software.ias.training.api.controller;
 
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import software.ias.training.api.commons.ControllerHandler;
+import software.ias.training.api.commons.OperationError;
+import software.ias.training.api.commons.OperationResult;
 import software.ias.training.api.domain.Product;
 import software.ias.training.api.model.*;
-import software.ias.training.api.repository.ProductRepository;
+import software.ias.training.api.services.CreateProductUseCase;
 import software.ias.training.api.services.ProductService;
+import software.ias.training.api.services.ReadProductByIdUseCase;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
 public class ProductController {
     private final ProductService service;
+    private final CreateProductUseCase createProduct;
+    private final ReadProductByIdUseCase readProductByIdUseCase;
 
-    public ProductController(ProductService service) {
+    public ProductController(
+            ProductService service,
+            CreateProductUseCase createProduct,
+            ReadProductByIdUseCase readProductByIdUseCase
+    ) {
         this.service = service;
+        this.createProduct = createProduct;
+        this.readProductByIdUseCase = readProductByIdUseCase;
     }
 
     @PostMapping
-    public CreateProductOperationOutput createProduct(
+    public ResponseEntity<Object> createProduct(
             @RequestBody CreateProductOperationInput input
     ) {
-        return service.createProduct(input);
+        return new ControllerHandler<>(
+                () -> input,
+                createProduct
+        )
+                .execute();
     }
 
     @GetMapping
@@ -33,12 +50,17 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Optional<ReadProductByIdOutput> readProductById(
+    public ResponseEntity<Object> readProductById(
             @PathVariable("id") String id
     ) {
-        UUID uuid = UUID.fromString(id);
-        ReadProductByIdInput input = new ReadProductByIdInput(uuid);
-        return service.readProductByIdOperation(input);
+        return new ControllerHandler<>(
+                () -> {
+                    UUID uuid = UUID.fromString(id);
+                    return new ReadProductByIdInput(uuid);
+                },
+                readProductByIdUseCase
+        )
+                .execute();
     }
 
     @PutMapping

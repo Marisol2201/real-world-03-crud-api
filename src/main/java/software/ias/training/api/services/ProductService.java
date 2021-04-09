@@ -17,32 +17,11 @@ public class ProductService {
         this.repository = repository;
     }
 
-    public CreateProductOperationOutput createProduct(CreateProductOperationInput input) {
-        UUID productId = UUID.randomUUID();
-        Product product = new Product(
-                productId,
-                input.getName(),
-                input.getDescription(),
-                input.getImage()
-        );
-        repository.storeProduct(product);
-        return new CreateProductOperationOutput(product);
-    }
-
     public List<Product> listProducts() {
         return repository.listProducts();
     }
 
-    public Optional<ReadProductByIdOutput> readProductByIdOperation(ReadProductByIdInput input) {
-        Optional<Product> productById = repository.findProductById(input.getId());
-        if (productById.isPresent()) {
-            Product product = productById.get();
-            ReadProductByIdOutput output = new ReadProductByIdOutput(product);
-            return Optional.of(output);
-        } else {
-            return Optional.empty();
-        }
-    }
+
 
     public UpdateProductOutput updateProductOperation(
             UpdateProductInput input
